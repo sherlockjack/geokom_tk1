@@ -1,4 +1,5 @@
 import tkinter as tk
+from createscratch import CreateFromScratchApp
 
 class MainMenuApp:
     def __init__(self, root):
@@ -15,11 +16,18 @@ class MainMenuApp:
             widget.destroy()
 
         # Create menu buttons
-        self.start_button = tk.Button(self.root, text="Create from Scratch")
+        self.start_button = tk.Button(self.root, text="Create from Scratch", command=self.create_from_scratch)
         self.start_button.pack(pady=10)
 
         self.load_button = tk.Button(self.root, text="Load Points from File")
         self.load_button.pack(pady=10)
+
+    def create_from_scratch(self):
+        # Call the CreateFromScratchApp from a separate file
+        self.root.destroy()
+        new_root = tk.Tk()
+        CreateFromScratchApp(new_root)
+        new_root.mainloop()
 
 if __name__ == "__main__":
     root = tk.Tk()
