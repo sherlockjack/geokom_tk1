@@ -23,11 +23,15 @@ class MainMenuApp:
         self.load_button.pack(pady=10)
 
     def create_from_scratch(self):
-        # Call the CreateFromScratchApp from a separate file
+        # Destroy the current window and open CreateFromScratchApp in a new window
         self.root.destroy()
         new_root = tk.Tk()
-        CreateFromScratchApp(new_root)
-        new_root.mainloop()
+        CreateFromScratchApp(new_root, self.reopen_main_menu)
+
+    def reopen_main_menu(self):
+        # Reopen the main menu
+        new_root = tk.Tk()
+        MainMenuApp(new_root)
 
 if __name__ == "__main__":
     root = tk.Tk()

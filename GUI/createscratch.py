@@ -4,8 +4,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 
 class CreateFromScratchApp:
-    def __init__(self, root):
+    def __init__(self, root, back_callback):
         self.root = root
+        self.back_callback = back_callback
         self.root.title("Create from Scratch")
         self.root.geometry("800x600")
 
@@ -20,6 +21,9 @@ class CreateFromScratchApp:
 
         self.enter_button = tk.Button(self.button_frame, text="Enter Points", command=self.send_points_to_fortune)
         self.enter_button.pack(side=tk.RIGHT)
+
+        self.back_button = tk.Button(self.button_frame, text="Back", command=self.back_to_main_menu)
+        self.back_button.pack(side=tk.LEFT)
 
         # Setting up matplotlib figure
         self.fig, self.ax = plt.subplots()
@@ -53,7 +57,12 @@ class CreateFromScratchApp:
         # This function will send points to the Fortune algorithm (to be implemented)
         print("Points to be processed:", self.points)
 
+    def back_to_main_menu(self):
+        # Destroy the current window and call the back callback to reopen the main menu
+        self.root.destroy()
+        self.back_callback()
+
 if __name__ == "__main__":
     root = tk.Tk()
-    app = CreateFromScratchApp(root)
+    app = CreateFromScratchApp(root, lambda: None)
     root.mainloop()
