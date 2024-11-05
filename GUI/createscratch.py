@@ -2,7 +2,7 @@ import tkinter as tk
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
-
+import filing
 class CreateFromScratchApp:
     def __init__(self, root, back_callback):
         self.root = root
@@ -61,6 +61,11 @@ class CreateFromScratchApp:
         # Destroy the current window and call the back callback to reopen the main menu
         self.root.destroy()
         self.back_callback()
+        
+    def load_points_from_file(self, file_path):
+        # Use the function from filing.py to load points
+        self.points = filing.load_points_from_file(file_path)
+        self.update_plot()
 
 if __name__ == "__main__":
     root = tk.Tk()
