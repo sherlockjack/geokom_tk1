@@ -53,15 +53,15 @@ class CreateFromScratchApp:
         self.canvas.draw()
 
     def send_points_to_fortune(self):
-        # Placeholder function to handle points
-        # This function will send points to the Fortune algorithm (to be implemented)
-        print("Points to be processed:", self.points)
+        # Convert all numpy float64 to standard Python floats for cleaner printing
+        formatted_points = [(float(x), float(y)) for x, y in self.points]
+        print("Points to be processed:", formatted_points)
 
     def back_to_main_menu(self):
         # Destroy the current window and call the back callback to reopen the main menu
         self.root.destroy()
         self.back_callback()
-        
+
     def load_points_from_file(self, file_path):
         # Use the function from filing.py to load points
         self.points = filing.load_points_from_file(file_path)
