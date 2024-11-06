@@ -1,13 +1,8 @@
-# createscratch.py
 import tkinter as tk
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import filing
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from VoronoiFortune.voronoi import VoronoiDiagram
 class CreateFromScratchApp:
     def __init__(self, root, back_callback):
         self.root = root
@@ -58,46 +53,15 @@ class CreateFromScratchApp:
         self.canvas.draw()
 
     def send_points_to_fortune(self):
-        # Create Voronoi diagram
-        print("List of tuples yang dikirim:")
-        print(self.points)
-        voronoi = VoronoiDiagram(self.points)
-        D = voronoi.compute_diagram()
-
-        # Clear the axes and set limits
-        self.ax.clear()
-        self.ax.set_xlim(0, 10)
-        self.ax.set_ylim(0, 10)
-        self.ax.set_title("Voronoi Diagram")
-
-        # Plot the original points
-        points = np.array(self.points)
-        if points.size > 0:
-            self.ax.plot(points[:, 0], points[:, 1], 'bo')
-
-        # Extract edges from DCEL D
-        edges = set()
-        for half_edge in D.halfedges:
-            origin = half_edge.origin
-            dest = half_edge.next.origin
-            x1, y1 = origin.x, origin.y
-            x2, y2 = dest.x, dest.y
-            # Create a sorted tuple to avoid duplicate edges
-            edge = tuple(sorted([(x1, y1), (x2, y2)]))
-            edges.add(edge)
-
-        # Plot the edges
-        for edge in edges:
-            (x1, y1), (x2, y2) = edge
-            self.ax.plot([x1, x2], [y1, y2], 'k-')
-
-        self.canvas.draw()
+        # Convert all numpy float64 to standard Python floats for cleaner printing
+        formatted_points = [(float(x), float(y)) for x, y in self.points]
+        print("Points to be processed:", formatted_points)
 
     def back_to_main_menu(self):
         # Destroy the current window and call the back callback to reopen the main menu
         self.root.destroy()
         self.back_callback()
-       
+
     def load_points_from_file(self, file_path):
         # Use the function from filing.py to load points
         self.points = filing.load_points_from_file(file_path)

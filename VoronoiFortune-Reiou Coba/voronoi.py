@@ -1,6 +1,6 @@
-from VoronoiFortune.AVLTree import AVLTree
-from VoronoiFortune.DCEL import DCEL
-from VoronoiFortune.PointHeap import PointHeap
+from AVLTree import AVLTree
+from DCEL import DCEL
+from PointHeap import PointHeap
 
 class VoronoiDiagram:
     def __init__(self, points):
