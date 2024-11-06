@@ -59,6 +59,7 @@ class CreateFromScratchApp:
 
     def send_points_to_fortune(self):
         # Create Voronoi diagram
+        self.points = [(float(x), float(y)) for x, y in self.points]
         print("List of tuples yang dikirim:")
         print(self.points)
         voronoi = VoronoiDiagram(self.points)

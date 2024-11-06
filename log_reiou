@@ -5,3 +5,4 @@ ZCZC 04/11/2024 23:08 Menambahkan Attribut sedikit
 ZCZC 05/11/2024 20:23 Menambahkan filing.py supaya bisa ngebuat titik-titik
 ZCZC 05/11/2024 20:28 Menormalisasikan NP untuk fortune algorithm
 ZCZC 06/11/2024 22:06 Mengubah beberapa hal termasuk GUI dan Voronoi Fortune
+ZCZC 06/11/2024 22:12 Mengubah np.float kembali
