@@ -1,8 +1,11 @@
+# createscratch.py
 import tkinter as tk
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import filing
+import fortune  
+
 class CreateFromScratchApp:
     def __init__(self, root, back_callback):
         self.root = root
@@ -56,6 +59,27 @@ class CreateFromScratchApp:
         # Convert all numpy float64 to standard Python floats for cleaner printing
         formatted_points = [(float(x), float(y)) for x, y in self.points]
         print("Points to be processed:", formatted_points)
+        # Run Fortune's algorithm
+        fortune_algo = fortune.FortuneAlgorithm(formatted_points)
+        fortune_algo.run()
+        # Plot the resulting Voronoi diagram
+        self.plot_voronoi(fortune_algo)
+
+    def plot_voronoi(self, fortune_algo):
+        self.ax.clear()
+        self.ax.set_xlim(0, 10)
+        self.ax.set_ylim(0, 10)
+        # Plot sites
+        points = np.array(self.points)
+        if points.size > 0:
+            self.ax.plot(points[:, 0], points[:, 1], 'bo')
+        # Plot edges
+        for edge in fortune_algo.edges:
+            if edge.start and edge.end:
+                x_values = [edge.start[0], edge.end[0]]
+                y_values = [edge.start[1], edge.end[1]]
+                self.ax.plot(x_values, y_values, 'r-')
+        self.canvas.draw()
 
     def back_to_main_menu(self):
         # Destroy the current window and call the back callback to reopen the main menu
