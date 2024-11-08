@@ -1,4 +1,6 @@
 # TODO: Convert this to be usable for fortune's algorithm
+import math
+
 
 class Node:
     def __init__(self, is_leaf = False):
@@ -23,8 +25,8 @@ class Node:
             return f"BreakpointNode({self.sites})"
 
 class BeachlineTree:
-    def __init__(self):
-        self.root = None
+    def __init__(self, root:Node=None):
+        self.root = root
 
     def insert(self, site):
         """Insert a new site into the beachline, splitting the arc above it."""
@@ -108,12 +110,92 @@ class BeachlineTree:
 
         return a1  # Return the middle arc for potential circle event checking
 
-    # TEST FAILED
+    # TODO: in progress
     def find_arc_above(self, site) -> Node:
         current = self.root
         while not current.is_leaf:
-            current = current.left if site[0] < current.sites[0][0] else current.right
+            breakpoints = self.compute_breakpoints(*(current.sites), directrix=site[1])
+            if len(breakpoints) == 0:
+                raise ValueError("No intersection found between parabolas")
+            elif len(breakpoints) == 1:
+                if site[0] < breakpoints[0][0]: # if site is to the left of the breakpoint, go left
+                    current = current.left
+                else:
+                    current = current.right
+            elif len(breakpoints) == 2:
+                # if the first breakpoint site (focus) is higher than the second breakpoint site, take the left breakpoint
+                if current.sites[0][1] > current.sites[1][1]:
+                    if site[0] < breakpoints[0][0]:
+                        current = current.left
+                    else:
+                        current = current.right
+                else:
+                    if site[0] < breakpoints[1][0]:
+                        current = current.left
+                    else:
+                        current = current.right
         return current
+
+    def compute_breakpoints(self, parabola1, parabola2, directrix):
+        """
+        Compute the intersection points (breakpoints) between two upward-facing parabolas.
+
+        Args:
+            parabola1: First parabola focus point (x1, y1)
+            parabola2: Second parabola focus point (x2, y2)
+            directrix: y-coordinate of the directrix (horizontal line)
+
+        Returns:
+            List of (x,y) coordinates where the parabolas intersect.
+            Can return 0, 1, or 2 points depending on if/how parabolas intersect.
+        """
+        # Extract focus points
+        x1, y1 = parabola1
+        x2, y2 = parabola2
+
+        # If the foci and directrix are identical, parabolas are the same
+        if x1 == x2 and y1 == y2:
+            return []
+
+        # Calculate quadratic coefficients
+        a = (1 / (2 * (y1 - directrix))) - (1 / (2 * (y2 - directrix)))
+        b = (x2 / (y2 - directrix)) - (x1 / (y1 - directrix))
+        c = ((x1 ** 2 + y1 ** 2 - directrix ** 2) / (2 * (y1 - directrix))) - \
+            ((x2 ** 2 + y2 ** 2 - directrix ** 2) / (2 * (y2 - directrix)))
+
+        # If a is zero, parabolas don't intersect properly (division by zero)
+        if abs(a) < 1e-10:
+            return []
+
+        # Calculate discriminant
+        discriminant = b * b - 4 * a * c
+
+        # No real solutions if discriminant is negative
+        if discriminant < 0:
+            return []
+
+        def get_y_coordinate(x, focus):
+            """Calculate the y-coordinate of a parabola given x and focus point."""
+            x1, y1 = focus
+            return ((x - x1) ** 2 + y1 ** 2) / (2 * (y1 - directrix))
+
+        # One solution if discriminant is zero
+        if abs(discriminant) < 1e-10:
+            x = -b / (2 * a)
+            y = get_y_coordinate(x, parabola1)
+            return [(x, y)]
+
+        # Two solutions if discriminant is positive
+        x1 = (-b + math.sqrt(discriminant)) / (2 * a)
+        x2 = (-b - math.sqrt(discriminant)) / (2 * a)
+        x1, x2 = min(x1, x2), max(x1, x2)  # Ensure x1 < x2
+        # Calculate corresponding y coordinates
+        points = []
+        y1 = get_y_coordinate(x1, parabola1)
+        y2 = get_y_coordinate(x2, parabola1)
+        points.append((x1, y1))
+        points.append((x2, y2))
+        return points
 
     # TEST FAILED
     # Modified from:
