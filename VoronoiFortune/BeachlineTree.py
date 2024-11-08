@@ -50,90 +50,171 @@ class BeachlineTree:
     def split_arc(self, arc_above, site):
         """
         Split an existing arc by a new site point.
-        Returns the newly created middle arc (a1).
+        Handles both one and two breakpoint scenarios.
 
-        Structure created:
-               (p,q)
-              /     \
-            a0     (q,p)
-                   /    \
-                  a1    a2
+        Args:
+            arc_above: The Node instance representing the arc to split.
+            site: The new site tuple (x, y).
+            breakpoints: List of current breakpoints between arc_above and its neighbors.
 
-        Where:
-        - p is the focus of the original arc (arc_above)
-        - q is the new site point
-        - a0, a1, a2 are arcs in left-to-right order
+        Returns:
+            The newly created middle arc (a1).
         """
-        # Create three arc nodes (leaves)
-        a0 = self.create_arc_node(arc_above.site)  # Left copy of original arc
-        a1 = self.create_arc_node(site)  # New arc from site
-        a2 = self.create_arc_node(arc_above.site)  # Right copy of original arc
+        if arc_above.site[1] == site[1]:
+            # Single breakpoint scenario
+            # Structure:
+            #        (p, q)
+            #       /      \
+            #      a0      a1
+            p = arc_above.site
+            q = site
 
-        # Create two breakpoint nodes
-        left_breakpoint = Node(is_leaf=False)
-        right_breakpoint = Node(is_leaf=False)
+            # Create two arc nodes
+            a0 = self.create_arc_node(p)  # Left copy of original arc
+            a1 = self.create_arc_node(q)  # New arc from site
 
-        # Set up the breakpoint sites
-        left_breakpoint.sites = (arc_above.site, site)  # (p,q)
-        right_breakpoint.sites = (site, arc_above.site)  # (q,p)
+            # Create one breakpoint node
+            breakpoint = Node(is_leaf=False)
+            breakpoint.sites = (p, q)  # (p, q)
 
-        # Build the tree structure
-        left_breakpoint.left = a0
-        left_breakpoint.right = right_breakpoint
-        right_breakpoint.left = a1
-        right_breakpoint.right = a2
+            # Build the tree structure
+            breakpoint.left = a0
+            breakpoint.right = a1
 
-        # Set parent pointers
-        a0.parent = left_breakpoint
-        right_breakpoint.parent = left_breakpoint
-        a1.parent = right_breakpoint
-        a2.parent = right_breakpoint
+            # Set parent pointers
+            a0.parent = breakpoint
+            a1.parent = breakpoint
 
-        # Replace the old arc in the tree
-        if arc_above.parent is None:
-            # If splitting the root
-            self.root = left_breakpoint
-            left_breakpoint.parent = None
-        else:
-            # If splitting a non-root arc
-            left_breakpoint.parent = arc_above.parent
-            if arc_above.parent.left == arc_above:
-                arc_above.parent.left = left_breakpoint
+            # Replace the old arc in the tree
+            if arc_above.parent is None:
+                # If splitting the root
+                self.root = breakpoint
+                breakpoint.parent = None
             else:
-                arc_above.parent.right = left_breakpoint
+                # If splitting a non-root arc
+                breakpoint.parent = arc_above.parent
+                if arc_above.parent.left == arc_above:
+                    arc_above.parent.left = breakpoint
+                else:
+                    arc_above.parent.right = breakpoint
 
-        # Transfer any circle event from the old arc
-        # Important: The circle event should be invalidated as the arc is being split
-        if arc_above.circle_event:
-            a0.circle_event = None  # Circle event is no longer valid
-            a2.circle_event = None  # Circle event is no longer valid
+            # Transfer any circle event from the old arc
+            if arc_above.circle_event:
+                a0.circle_event = None  # Circle event is no longer valid
 
-        return a1  # Return the middle arc for potential circle event checking
+            return a1  # Return the new arc for potential circle event checking
 
-    # TODO: in progress
-    def find_arc_above(self, site) -> Node:
+        else:
+            # Two breakpoints scenario
+            # Structure created:
+            #        (p, q)
+            #       /      \
+            #      a0    (q, p)
+            #           /      \
+            #          a1      a2
+
+            p = arc_above.site
+            q = site
+
+            # Create three arc nodes (leaves)
+            a0 = self.create_arc_node(p)  # Left copy of original arc
+            a1 = self.create_arc_node(q)  # New arc from site
+            a2 = self.create_arc_node(p)  # Right copy of original arc
+
+            # Create two breakpoint nodes
+            left_breakpoint = Node(is_leaf=False)
+            right_breakpoint = Node(is_leaf=False)
+
+            # Set up the breakpoint sites
+            left_breakpoint.sites = (p, q)  # (p, q)
+            right_breakpoint.sites = (q, p)  # (q, p)
+
+            # Build the tree structure
+            left_breakpoint.left = a0
+            left_breakpoint.right = right_breakpoint
+            right_breakpoint.left = a1
+            right_breakpoint.right = a2
+
+            # Set parent pointers
+            a0.parent = left_breakpoint
+            right_breakpoint.parent = left_breakpoint
+            a1.parent = right_breakpoint
+            a2.parent = right_breakpoint
+
+            # Replace the old arc in the tree
+            if arc_above.parent is None:
+                # If splitting the root
+                self.root = left_breakpoint
+                left_breakpoint.parent = None
+            else:
+                # If splitting a non-root arc
+                left_breakpoint.parent = arc_above.parent
+                if arc_above.parent.left == arc_above:
+                    arc_above.parent.left = left_breakpoint
+                else:
+                    arc_above.parent.right = left_breakpoint
+
+            # Transfer any circle event from the old arc
+            if arc_above.circle_event:
+                a0.circle_event = None  # Circle event is no longer valid
+                a2.circle_event = None  # Circle event is no longer valid
+
+            return a1  # Return the middle arc for potential circle event checking
+
+    def find_arc_above(self, site):
+        """
+        Find the arc in the beachline that lies directly above the given site.
+
+        Args:
+            site: The new site tuple (x, y).
+
+        Returns:
+            A tuple containing:
+                - The Node instance representing the arc above.
+                - The list of current breakpoints between this arc and its neighbors.
+        """
         current = self.root
+        directrix = site[1]
+
         while not current.is_leaf:
-            breakpoints = self.compute_breakpoints(*(current.sites), directrix=site[1])
-            if len(breakpoints) == 0:
+            parabola1, parabola2 = current.sites
+            # handle the case where the new site is at the same y-coordinate as the focus of one of the parabolas
+            if parabola1[1] == directrix or parabola2[1] == directrix:
+                if parabola1[0] < site[0]:
+                    current = current.right
+                else:
+                    current = current.left
+                continue
+            breakpoints = self.compute_breakpoints(parabola1, parabola2, directrix)
+
+            if not breakpoints:
                 raise ValueError("No intersection found between parabolas")
-            elif len(breakpoints) == 1:
-                if site[0] < breakpoints[0][0]: # if site is to the left of the breakpoint, go left
+
+            if len(breakpoints) == 1:
+                # Only one breakpoint, decide based on x-coordinate
+                x, _ = breakpoints[0]
+                if site[0] <= x:
                     current = current.left
                 else:
                     current = current.right
             elif len(breakpoints) == 2:
-                # if the first breakpoint site (focus) is higher than the second breakpoint site, take the left breakpoint
+                # Two breakpoints
+                # if the first breakpoint site is higher than the second breakpoint site, take the left breakpoint
+                x1, _ = breakpoints[0]
+                x2, _ = breakpoints[1]
                 if current.sites[0][1] > current.sites[1][1]:
-                    if site[0] < breakpoints[0][0]:
+                    if site[0] <= x1:
                         current = current.left
                     else:
                         current = current.right
                 else:
-                    if site[0] < breakpoints[1][0]:
+                    if site[0] <= x2:
                         current = current.left
                     else:
                         current = current.right
+            else:
+                raise ValueError("Unexpected number of breakpoints computed.")
+
         return current
 
     def compute_breakpoints(self, parabola1, parabola2, directrix):
@@ -153,9 +234,17 @@ class BeachlineTree:
         x1, y1 = parabola1
         x2, y2 = parabola2
 
+        def get_y_coordinate(x, focus):
+            """Calculate the y-coordinate of a parabola given x and focus point."""
+            x1, y1 = focus
+            return ((x - x1) ** 2 + y1 ** 2) / (2 * (y1 - directrix))
+
         # If the foci and directrix are identical, parabolas are the same
         if x1 == x2 and y1 == y2:
             return []
+
+        if y1 == y2: # if the foci are on the same line, the parabolas are parallel, return the midpoint
+            return [[(x1 + x2) / 2, get_y_coordinate((x1 + x2) / 2, parabola1)]]
 
         # Calculate quadratic coefficients
         a = (1 / (2 * (y1 - directrix))) - (1 / (2 * (y2 - directrix)))
@@ -173,11 +262,6 @@ class BeachlineTree:
         # No real solutions if discriminant is negative
         if discriminant < 0:
             return []
-
-        def get_y_coordinate(x, focus):
-            """Calculate the y-coordinate of a parabola given x and focus point."""
-            x1, y1 = focus
-            return ((x - x1) ** 2 + y1 ** 2) / (2 * (y1 - directrix))
 
         # One solution if discriminant is zero
         if abs(discriminant) < 1e-10:
@@ -197,7 +281,7 @@ class BeachlineTree:
         points.append((x2, y2))
         return points
 
-    # TEST FAILED
+    # UNTESTED
     # Modified from:
     # GitHub: https://github.com/akaalharbi/voronoi-fortune/blob/main/python/fortune.py
     def vertical_intersection(self, parabola:Node, point):
@@ -209,4 +293,4 @@ class BeachlineTree:
         INPUT: pi = [xi, yi] """
         px, py = parabola.site  # unpack them
         x0, y0 = point
-        return ( (x0**2 - px**2)**2 + py**2 - y0**2) / (2*(py - y0))
+        return ((x0 - px) ** 2 + py ** 2 - y0 ** 2)/(2*(py-y0))
