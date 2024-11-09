@@ -1,5 +1,7 @@
 import heapq
 from VoronoiFortune.BeachlineTree import BeachlineTree
+from VoronoiFortune.fortune import circumcenter
+
 
 class Event:
     def __init__(self, point, event_type, sites=None):
@@ -100,7 +102,6 @@ class VoronoiDiagram:
             self.handle_circle_event(event)
 
     def handle_site_event(self, event: Event):
-        # TODO: Implement the logic to handle site events
         # Find the arc directly above the site event
         arc_above = self.beachline.find_arc_above(event.point)
 
@@ -115,7 +116,7 @@ class VoronoiDiagram:
         # Find the y-coordinate where the vertical line from the site event intersects the beachline (arc above)
         y_position = self.beachline.vertical_intersection(arc_above, event.point)
 
-        # TODO: Add the edges to the DCEL (event.point[0], y_position) and another edge if possible (when the new site intersects with a breakpoint)
+        # TODO: Add the edge to the DCEL and another edge if possible (when the new site intersects with a breakpoint)
 
         # Check for new circle events
         circumcenter, sites = self.beachline.check_circle_event(arc_above, event.point[1]) # Check for circle events involving the arc above and the new arc at the site event's y-coordinate (current sweep line position)
@@ -123,5 +124,28 @@ class VoronoiDiagram:
         heapq.heappush(self.events, circle_event)
 
     def handle_circle_event(self, event):
-        # TODO: Implement the logic to handle circle events
-        pass
+        # Delete circle events (check if the neighboring arcs have circle events and remove them)
+        l = event.sites[0]
+        arc = event.sites[1]  # The middle arc will disappear
+        r = event.sites[2]
+        if l.circle_event:
+            try:
+                self.events.remove(l.circle_event)
+            except ValueError:
+                pass
+            l.circle_event = None
+        if r.circle_event:
+            try:
+                self.events.remove(r.circle_event)
+            except ValueError:
+                pass
+            r.circle_event = None
+
+        # TODO: Add the vertex and edge to the diagram
+
+        # Find the arc that will disappear and delete it
+        self.beachline.delete_arc(arc)  # TODO: Implement the delete_arc method
+
+        # Check for new circle events
+        circumcenter, sites = self.beachline.check_circle_event(arc, event.point[1])
+

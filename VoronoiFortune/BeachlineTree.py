@@ -300,9 +300,12 @@ class BeachlineTree:
         Check for circle event involving the arc above and the arc to the left and right of it.
         """
         # Find the left and right neighbors of the arc above
-        l = self.get_left_neighbour(arc_above).site
-        m = arc_above.site
-        r = self.get_right_neighbour(arc_above).site
+        l_arc = self.get_left_neighbour(arc_above)
+        m_arc = arc_above
+        r_arc = self.get_right_neighbour(arc_above)
+        l = l_arc.site if l_arc else None
+        m = m_arc.site
+        r = r_arc.site if r_arc else None
 
         lx, ly = l
         mx, my = m
@@ -326,7 +329,9 @@ class BeachlineTree:
             return
 
         arc_above.circle_event = True
-        return c, (l, m, r)
+        l.circle_event = True
+        r.circle_event = True
+        return c, (l_arc, m_arc, r_arc)
 
     def get_left_neighbour(self, node: Node) -> Node:
         """Get the left neighbour (parabola) in the beachline."""
@@ -419,3 +424,50 @@ class BeachlineTree:
         y = (a1 * c2 - c1 * a2) / det
 
         return (x, y)
+
+    def delete_arc(self, arc: Node):
+        """Delete an arc from the beachline."""
+        if not arc.is_leaf:
+            raise ValueError("Cannot delete a non-leaf node.")
+
+        # Find the parent of the arc to be deleted
+        parent = arc.parent
+
+        # Find the left and right neighbors
+        left_neighbor = self.get_left_neighbour(arc)
+        right_neighbor = self.get_right_neighbour(arc)
+
+        # Remove the arc from the tree
+        if parent is None:
+            # If the arc is the root, set the root to None
+            self.root = None
+        else:
+            # Determine if the arc is a left or right child
+            if parent.left == arc:
+                parent.left = None
+            else:
+                parent.right = None
+
+        # If both neighbors exist, create a new breakpoint
+        if left_neighbor and right_neighbor:
+            # Create a new breakpoint node
+            new_breakpoint = Node(is_leaf=False)
+            new_breakpoint.sites = (left_neighbor.site, right_neighbor.site)
+
+            # Set up the new breakpoint's children
+            new_breakpoint.left = left_neighbor
+            new_breakpoint.right = right_neighbor
+
+            # Set parent pointers
+            left_neighbor.parent = new_breakpoint
+            right_neighbor.parent = new_breakpoint
+
+            # Update the parent's child to the new breakpoint
+            if parent is None:
+                # If the deleted arc was the root, set the new breakpoint as the root
+                self.root = new_breakpoint
+            else:
+                if parent.left == arc:
+                    parent.left = new_breakpoint
+                else:
+                    parent.right = new_breakpoint
