@@ -2,9 +2,10 @@ import heapq
 from VoronoiFortune.BeachlineTree import BeachlineTree
 
 class Event:
-    def __init__(self, point, event_type):
+    def __init__(self, point, event_type, sites=None):
         self.point = point # Tuple (x, y)
         self.event_type = event_type  # 0 for site event, 1 for circle event
+        self.sites = sites # List of sites involved in the circle event (3 sites)
 
     # Invert comparison to ensure the correct order in the max heap
     def __lt__(self, other):
@@ -108,18 +109,18 @@ class VoronoiDiagram:
             self.events.remove(arc_above.circle_event)
             arc_above.circle_event = None
 
-        # Split the arc above into three arcs (a0, a1, a2) a1 is the new arc for the site event, a0 and a2 are the left and right copies of the original arc
+        # Split the arc above
         self.beachline.split_arc(arc_above, event.point)
 
-        # Find the y-coordinate where the vertical line from the site event intersects the beachline (arc above) (this if for adding the edges to the DCEL)
+        # Find the y-coordinate where the vertical line from the site event intersects the beachline (arc above)
         y_position = self.beachline.vertical_intersection(arc_above, event.point)
 
         # TODO: Add the edges to the DCEL (event.point[0], y_position) and another edge if possible (when the new site intersects with a breakpoint)
 
         # Check for new circle events
-        self.beachline.check_circle_events(arc_above, event.point[1]) # Check for circle events involving the arc above and the new arc at the site event's y-coordinate (current sweep line position)
-
-
+        circumcenter, sites = self.beachline.check_circle_event(arc_above, event.point[1]) # Check for circle events involving the arc above and the new arc at the site event's y-coordinate (current sweep line position)
+        circle_event = Event(circumcenter, 1, sites)
+        heapq.heappush(self.events, circle_event)
 
     def handle_circle_event(self, event):
         # TODO: Implement the logic to handle circle events
