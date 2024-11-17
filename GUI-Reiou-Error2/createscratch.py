@@ -1,11 +1,12 @@
-# createscratch.py
 import tkinter as tk
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import filing
-import fortune  
-
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from  VoronoiFortune_Reiou_Error2.voronoi import Voronoi
 class CreateFromScratchApp:
     def __init__(self, root, back_callback):
         self.root = root
@@ -56,32 +57,50 @@ class CreateFromScratchApp:
         self.canvas.draw()
 
     def send_points_to_fortune(self):
-        # Convert all numpy float64 to standard Python floats for cleaner printing
+        # Convert all numpy float64 to standard Python floats
         formatted_points = [(float(x), float(y)) for x, y in self.points]
         print("Points to be processed:", formatted_points)
-        # Run Fortune's algorithm
-        fortune_algo = fortune.FortuneAlgorithm(formatted_points)
-        fortune_algo.run()
-        # Plot the resulting Voronoi diagram
-        self.plot_voronoi(fortune_algo)
 
-    def plot_voronoi(self, fortune_algo):
+        # Compute Voronoi diagram
+        voronoi = Voronoi(formatted_points)
+        voronoi.process()
+
+        # Plot the Voronoi diagram
+        self.plot_voronoi_diagram(voronoi)
+
+    def plot_voronoi_diagram(self, voronoi):
+        # Clear the plot
         self.ax.clear()
         self.ax.set_xlim(0, 10)
         self.ax.set_ylim(0, 10)
-        # Plot sites
+        self.ax.set_title("Voronoi Diagram")
+
+        # Plot the original points
         points = np.array(self.points)
         if points.size > 0:
             self.ax.plot(points[:, 0], points[:, 1], 'bo')
-        # Plot edges
-        print("*******************************")
-        print(fortune_algo.edges)
-        for edge in fortune_algo.edges:
+
+        # Plot the Voronoi edges
+        for edge in voronoi.edges:
             if edge.start and edge.end:
                 x_values = [edge.start[0], edge.end[0]]
                 y_values = [edge.start[1], edge.end[1]]
-                self.ax.plot(x_values, y_values, 'r-')
+                self.ax.plot(x_values, y_values, 'k-')
+            elif edge.start:
+                # For edges that extend to infinity, we can draw them to the plot boundaries
+                # This is a simplification and may not represent infinite edges accurately
+                x0, y0 = edge.start
+                x1, y1 = edge.start
+                # Extend the line in the direction perpendicular to the bisector
+                dx = edge.right[1] - edge.left[1]
+                dy = -(edge.right[0] - edge.left[0])
+                length = 10000  # A large number to simulate infinity
+                x1 += dx * length
+                y1 += dy * length
+                self.ax.plot([x0, x1], [y0, y1], 'k--')
+
         self.canvas.draw()
+
 
     def back_to_main_menu(self):
         # Destroy the current window and call the back callback to reopen the main menu
