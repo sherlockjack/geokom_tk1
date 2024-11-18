@@ -83,7 +83,6 @@ class Voronoi:
 
         if not self.verbose:
             print("Convex hull at end:")
-            self.bt.printHelper(root, "", True)
             arc = self.arc
             string = " "
             while arc is not None:
@@ -113,10 +112,7 @@ class Voronoi:
             if self.verbose: print("At x:",round(e.x),"Removing: ",e.a.number,round(a.p.y),int(e.pprev.y),int(e.pnext.y))
 
             root = self.bt.delete_node(root, e)
-            
-            if self.verbose: 
-                self.bt.printHelper(root, "", True)
-            
+                        
             # start new edge
             s = Segment(e.p)
             s.sites = [a.aprev.p, a.p, a.anext.p]  # Store the three sites
@@ -212,7 +208,6 @@ class Voronoi:
                     self.bt.nodeb.p = i.anext.p
                     self.bt.nodeb.arc = i.anext
                     
-                    if self.verbose: self.bt.printHelper(root, "", True)
 
                     # add new half-edges connected to i's endpoints
                     seg = Segment(z)
@@ -258,7 +253,6 @@ class Voronoi:
                 i.s1 = i.anext.s0 = seg
                 self.output.append(seg)
 
-                if self.verbose: self.bt.printHelper(root, "", True)
 
                 if self.verbose:
                     arc = self.arc
